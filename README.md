@@ -5,6 +5,21 @@ required database.
 Note that `osm2pgsql` by default does not put all available tags into
 the database and osmf only deals with this limited tag-set.
 
+# Examples
+```bash
+# Find all points within 100m of the Eiffel tower:
+osmf point 48.85829 2.29446 100
+
+# Find bicycle shops in Bremen:
+osmf point 53.07583 8.80716 10000 shop=bicycle
+
+# Searching for multiple values of the same tag is also possible:
+osmf point 53.07583 8.80716 10000 sport=climbing sport=swimming
+
+# Use UNIX tools to compact the output:
+osmf point 48.85829 2.29446 100 | grep -e '^$' -e '^osm_id' -e '^name'
+```
+
 # Usage
 ```
 osmf line <lat> <long> <radius_meter> [<tag>=<value>]...
@@ -87,18 +102,3 @@ Tags only for for points:
 
 The tags are explained
 [here](https://wiki.openstreetmap.org/wiki/Map_Features).
-
-# Examples
-```bash
-# Find all points within 100m of the Eiffel tower:
-osmf point 48.85829 2.29446 100
-
-# Find bicycle shops in Bremen:
-osmf point 53.07583 8.80716 10000 shop=bicycle
-
-# Searching for multiple values of the same tag is also possible:
-osmf point 53.07583 8.80716 10000 sport=climbing sport=swimming
-
-# Use UNIX tools to compact the output:
-osmf point 48.85829 2.29446 100 | grep -e '^$' -e '^osm_id' -e '^name'
-```

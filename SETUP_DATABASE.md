@@ -1,5 +1,5 @@
-This are some brief notes on how I set up the PostreSQL database with
-osm data on OpenBSD.
+These are some brief notes on how I set up the PostreSQL database with
+osm data.
 
 See also:
 - https://github.com/openstreetmap/osm2pgsql#usage

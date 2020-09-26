@@ -101,7 +101,19 @@ func main() {
 				// Those columns are not for displaying.
 			} else if columnName == "osm_id" {
 				val := columnPointers[i].(*interface{})
-				fmt.Printf("%s: %d\n", columnName, (*val).(int64))
+				id := (*val).(int64)
+				fmt.Printf("%s: %d\n", columnName, id)
+				if id < 0 {
+					id = -id // Seems to be necessary for the links.
+				}
+				switch os.Args[1] {
+				case "point":
+					fmt.Printf("osm_link: https://www.openstreetmap.org/node/%d\n", id)
+				case "line":
+					fmt.Printf("osm_link: https://www.openstreetmap.org/way/%d\n", id)
+				case "polygon":
+					fmt.Printf("osm_link: https://www.openstreetmap.org/relation/%d\n", id)
+				}
 			} else {
 				val := columnPointers[i].(*interface{})
 				valString, _ := (*val).(string) // Second return value is used to accept nil.

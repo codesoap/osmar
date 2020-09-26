@@ -6,18 +6,64 @@ Note that `osm2pgsql` by default does not put all available tags into
 the database and osmf only deals with this limited tag-set.
 
 # Examples
-```bash
-# Find all points within 100m of the Eiffel tower:
-osmf point 48.85829 2.29446 100
+```console
+$ # Find all points within 50m of the center of Bremen, Germany:
+$ osmf point 53.076 8.807 50
+osm_id: 4884069615
+osm_link: https://www.openstreetmap.org/node/4884069615
+access:
+addr:housename:
+addr:housenumber: 13
+...
 
-# Find bicycle shops in Bremen:
-osmf point 53.07583 8.80716 10000 shop=bicycle
+$ # Use UNIX tools to compact the output:
+$ osmf point 53.076 8.807 50 | awk '/^$/ /[^ ]*: ./'
+osm_id: 4884069615
+osm_link: https://www.openstreetmap.org/node/4884069615
+addr:housenumber: 13
+amenity: restaurant
+name: Feines 1783
 
-# Searching for multiple values of the same tag is also possible:
-osmf point 53.07583 8.80716 10000 sport=climbing sport=swimming
+osm_id: 2283633587
+osm_link: https://www.openstreetmap.org/node/2283633587
+name: Der Schütting
+operator: Bremen Tourismus
+tourism: information
+...
 
-# Use UNIX tools to compact the output:
-osmf point 48.85829 2.29446 100 | grep -e '^$' -e '^osm_id' -e '^name'
+$ # Find a bicycle shop near the center of Bremen:
+$ osmf point 53.076 8.807 500 shop=bicycle | awk '/^$/ /[^ ]*: ./'
+osm_id: 834082330
+osm_link: https://www.openstreetmap.org/node/834082330
+addr:housenumber: 30-32
+name: Velo-Sport
+operator: Velo-Sport Ihr Radsporthaus GmbH
+shop: bicycle
+
+$ # Searching for multiple values of the same tag is also possible:
+$ osmf point 53.076 8.807 15000 sport=climbing sport=swimming | awk '/^$/ /[^ ]*: ./'
+osm_id: 3966827862
+osm_link: https://www.openstreetmap.org/node/3966827862
+addr:housenumber: 5
+leisure: sports_centre
+name: Boulder Base Bremen
+sport: climbing
+
+osm_id: 3063163381
+osm_link: https://www.openstreetmap.org/node/3063163381
+addr:housenumber: 160
+leisure: club
+name: Bremischer Schwimmverein e.V.
+sport: swimming;tennis
+...
+
+$ # Pro tip: Use "_" to search for any value:
+$ osmf point 53.076 8.807 500 sport=_ | awk '/^$/ /[^ ]*: ./'
+osm_id: 4715819785
+osm_link: https://www.openstreetmap.org/node/4715819785
+name: Absolute Run
+shop: sports
+sport: running
 ```
 
 # Usage

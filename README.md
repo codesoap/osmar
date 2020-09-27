@@ -1,4 +1,4 @@
-A small tool for playing around with osm-Databases (those resulting
+A small tool for playing around with osm databases (those resulting
 from `osm2pgsql`). Read `SETUP_DATABASE.md` to learn how to set up the
 required database.
 

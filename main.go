@@ -112,7 +112,11 @@ func getTagsFilter(tags map[string][]string) (filter string) {
 	for tag, values := range tags {
 		filter += "\nAND ("
 		for i, value := range values {
-			filter += fmt.Sprintf(" %s LIKE '%%%s%%'", tag, value)
+			// Poor mans SQL escaping for simplicity:
+			tag = strings.ReplaceAll(tag, `"`, "")
+			value = strings.ReplaceAll(value, `'`, "")
+
+			filter += fmt.Sprintf(` "%s" LIKE '%%%s%%'`, tag, value)
 			if len(values) > i+1 {
 				filter += " OR"
 			}

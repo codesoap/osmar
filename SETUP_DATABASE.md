@@ -24,6 +24,10 @@ psql -d gis -c 'CREATE EXTENSION postgis;'
 Schema reference: https://wiki.openstreetmap.org/wiki/Osm2pgsql/schema
 
 ```bash
+# Download the osm data:
+wget 'https://download.geofabrik.de/europe/azores-latest.osm.pbf'
+wget 'https://download.geofabrik.de/europe/serbia-latest.osm.pbf'
+
 # Takes ~30s; turns the ~10MB into ~300MB:
 osm2pgsql --create --database gis azores-latest.osm.pbf
 

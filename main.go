@@ -160,16 +160,19 @@ func printResult(colNames []string, colPtrs []interface{}, rows *sql.Rows) error
 			val := colPtrs[i].(*interface{})
 			id := (*val).(int64)
 			fmt.Printf("%s: %d\n", colName, id)
-			if id < 0 {
-				id = -id // Seems to be necessary for the links.
-			}
 			switch os.Args[1] {
 			case "point":
 				fmt.Printf("osm_link: https://www.openstreetmap.org/node/%d\n", id)
 			case "line":
 				fmt.Printf("osm_link: https://www.openstreetmap.org/way/%d\n", id)
 			case "polygon":
-				fmt.Printf("osm_link: https://www.openstreetmap.org/relation/%d\n", id)
+				// Relations have negative IDs.
+				// See https://help.openstreetmap.org/questions/2259
+				if id < 0 {
+					fmt.Printf("osm_link: https://www.openstreetmap.org/relation/%d\n", -id)
+				} else {
+					fmt.Printf("osm_link: https://www.openstreetmap.org/way/%d\n", id)
+				}
 			}
 		} else {
 			val := colPtrs[i].(*interface{})

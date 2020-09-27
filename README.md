@@ -5,6 +5,14 @@ required database.
 Note that `osm2pgsql` by default does not put all available tags into
 the database and osmf only deals with this limited tag-set.
 
+# Installation
+```bash
+git clone git@github.com:codesoap/osmf.git
+cd osmf
+go install
+# The binary is now at ~/go/bin/osmf.
+```
+
 # Examples
 ```console
 $ # Find all points within 50m of the center of Bremen, Germany:

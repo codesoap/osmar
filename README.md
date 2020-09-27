@@ -17,30 +17,31 @@ go install
 ```console
 $ # Find all points within 50m of the center of Bremen, Germany:
 $ osmf point 53.076 8.807 50
-osm_id: 4884069615
-osm_link: https://www.openstreetmap.org/node/4884069615
+distance_meters: 10
+osm_id: 2523704361
+osm_link: https://www.openstreetmap.org/node/2523704361
 access:
 addr:housename:
-addr:housenumber: 13
 ...
 
 $ # Use UNIX tools to compact the output:
 $ osmf point 53.076 8.807 50 | awk '/^$/ /[^ ]*: ./'
-osm_id: 4884069615
-osm_link: https://www.openstreetmap.org/node/4884069615
-addr:housenumber: 13
-amenity: restaurant
-name: Feines 1783
+distance_meters: 10
+osm_id: 2523704361
+osm_link: https://www.openstreetmap.org/node/2523704361
+barrier: bollard
 
-osm_id: 2283633587
-osm_link: https://www.openstreetmap.org/node/2283633587
-name: Der Schütting
-operator: Bremen Tourismus
-tourism: information
+distance_meters: 11
+osm_id: 699745130
+osm_link: https://www.openstreetmap.org/node/699745130
+addr:housenumber: 1
+amenity: restaurant
+name: Beck's am Markt
 ...
 
 $ # Find a bicycle shop near the center of Bremen:
 $ osmf point 53.076 8.807 500 shop=bicycle | awk '/^$/ /[^ ]*: ./'
+distance_meters: 244
 osm_id: 834082330
 osm_link: https://www.openstreetmap.org/node/834082330
 addr:housenumber: 30-32
@@ -50,23 +51,23 @@ shop: bicycle
 
 $ # Searching for multiple values of the same tag is also possible:
 $ osmf point 53.076 8.807 15000 sport=climbing sport=swimming | awk '/^$/ /[^ ]*: ./'
-osm_id: 3966827862
-osm_link: https://www.openstreetmap.org/node/3966827862
-addr:housenumber: 5
-leisure: sports_centre
-name: Boulder Base Bremen
+distance_meters: 3169
+osm_id: 486137250
+osm_link: https://www.openstreetmap.org/node/486137250
+name: Klettergarten Bremen
 sport: climbing
-
+...
+distance_meters: 7048
 osm_id: 3063163381
 osm_link: https://www.openstreetmap.org/node/3063163381
 addr:housenumber: 160
 leisure: club
 name: Bremischer Schwimmverein e.V.
 sport: swimming;tennis
-...
 
 $ # Pro tip: Use "_" to search for any value:
 $ osmf point 53.076 8.807 500 sport=_ | awk '/^$/ /[^ ]*: ./'
+distance_meters: 342
 osm_id: 4715819785
 osm_link: https://www.openstreetmap.org/node/4715819785
 name: Absolute Run

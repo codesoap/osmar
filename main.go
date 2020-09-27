@@ -71,10 +71,13 @@ func getTags() (map[string][]string, error) {
 }
 
 func queryDB(lat, long, radius float64, tags map[string][]string) (*sql.Rows, error) {
-	query := fmt.Sprintf("SELECT * FROM planet_osm_%s\n", os.Args[1])
+	refPoint := fmt.Sprintf("ST_SetSRID(ST_Point(%f, %f), 4326)::geography", long, lat)
+	distance := fmt.Sprintf("ST_Distance(ST_Transform(way, 4326)::geography, %s) AS distance", refPoint)
+	query := fmt.Sprintf("SELECT %s, * FROM planet_osm_%s\n", distance, os.Args[1])
 	poly := getBoundaryPolygon(lat, long, radius)
 	query += fmt.Sprintf("WHERE way && ST_Transform(ST_GeomFromText('%s', 4326), 3857)", poly)
 	query += getTagsFilter(tags)
+	query += "\nORDER BY distance"
 	return pool.Query(query)
 }
 
@@ -142,6 +145,9 @@ func printResult(colNames []string, colPtrs []interface{}, rows *sql.Rows) error
 	for i, colName := range colNames {
 		if colName == "z_order" || colName == "way_area" || colName == "way" {
 			// Those columns are not for displaying.
+		} else if colName == "distance" {
+			val := colPtrs[i].(*interface{})
+			fmt.Printf("distance_meters: %.0f\n", (*val).(float64))
 		} else if colName == "osm_id" {
 			val := colPtrs[i].(*interface{})
 			id := (*val).(int64)

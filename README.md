@@ -49,6 +49,14 @@ name: Velo-Sport
 operator: Velo-Sport Ihr Radsporthaus GmbH
 shop: bicycle
 
+$ # Find a natural forest of at least 1km² in Bremen:
+$ osmf polygon 53.076 8.807 3300 natural=wood 'way_area>1e+6' | awk '/^$/ /[^ ]*: ./'
+distance_meters: 3242
+osm_id: -1717327
+osm_link: https://www.openstreetmap.org/relation/1717327
+natural: wood
+way_area: 1663160.000000
+
 $ # Searching for multiple values of the same tag is also possible:
 $ osmf point 53.076 8.807 15000 sport=climbing sport=swimming | awk '/^$/ /[^ ]*: ./'
 distance_meters: 3169
@@ -77,9 +85,9 @@ sport: running
 
 # Usage
 ```
-osmf line <lat> <long> <radius_meter> [<tag>=<value>]...
 osmf point <lat> <long> <radius_meter> [<tag>=<value>]...
-osmf polygon <lat> <long> <radius_meter> [<tag>=<value>]...
+osmf line <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
+osmf polygon <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
 
 General tags:
 - access

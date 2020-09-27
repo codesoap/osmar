@@ -12,9 +12,9 @@ import (
 )
 
 const usage = `Usage:
-osmf line <lat> <long> <radius_meter> [<tag>=<value>]...
 osmf point <lat> <long> <radius_meter> [<tag>=<value>]...
-osmf polygon <lat> <long> <radius_meter> [<tag>=<value>]...
+osmf line <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
+osmf polygon <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
 `
 
 var pool *sql.DB
@@ -43,10 +43,10 @@ func main() {
 	dieOnErr("Could not parse long: %s\n", err)
 	radius, err := strconv.ParseFloat(os.Args[4], 64)
 	dieOnErr("Could not parse radius: %s\n", err)
-	tags, err := getTags()
-	dieOnErr("Could not parse tags: %s\n", err)
+	tags, minWayArea, maxWayArea, err := getFilters()
+	dieOnErr("Could not parse filters: %s\n", err)
 
-	rows, err := queryDB(lat, long, radius, tags)
+	rows, err := queryDB(lat, long, radius, tags, minWayArea, maxWayArea)
 	dieOnErr("Failed to query database: %s\n", err)
 	dieOnErr("Failed to print results: %s\n", printResults(rows))
 }
@@ -58,25 +58,43 @@ func dieOnErr(msg string, err error) {
 	}
 }
 
-func getTags() (map[string][]string, error) {
-	tags := make(map[string][]string)
-	for _, tag := range os.Args[5:] {
-		split := strings.SplitN(tag, "=", 2)
-		if len(split) != 2 {
-			return tags, fmt.Errorf("tag without value: %s", tag)
+func getFilters() (tags map[string][]string, minWayArea, maxWayArea *float64, err error) {
+	tags = make(map[string][]string)
+	for _, arg := range os.Args[5:] {
+		if strings.HasPrefix(arg, "way_area>") {
+			var minWayAreaTmp float64
+			minWayAreaTmp, err = strconv.ParseFloat(arg[9:], 64)
+			if err != nil {
+				return
+			}
+			minWayArea = &minWayAreaTmp
+		} else if strings.HasPrefix(arg, "way_area<") {
+			var maxWayAreaTmp float64
+			maxWayAreaTmp, err = strconv.ParseFloat(arg[9:], 64)
+			if err != nil {
+				return
+			}
+			maxWayArea = &maxWayAreaTmp
+		} else {
+			split := strings.SplitN(arg, "=", 2)
+			if len(split) != 2 {
+				err = fmt.Errorf("tag without value: %s", arg)
+				return
+			}
+			tags[split[0]] = append(tags[split[0]], split[1])
 		}
-		tags[split[0]] = append(tags[split[0]], split[1])
 	}
-	return tags, nil
+	return
 }
 
-func queryDB(lat, long, radius float64, tags map[string][]string) (*sql.Rows, error) {
+func queryDB(lat, long, radius float64, tags map[string][]string, minWayArea, maxWayArea *float64) (*sql.Rows, error) {
 	refPoint := fmt.Sprintf("ST_SetSRID(ST_Point(%f, %f), 4326)::geography", long, lat)
 	distance := fmt.Sprintf("ST_Distance(ST_Transform(way, 4326)::geography, %s) AS distance", refPoint)
 	query := fmt.Sprintf("SELECT %s, * FROM planet_osm_%s\n", distance, os.Args[1])
 	poly := getBoundaryPolygon(lat, long, radius)
 	query += fmt.Sprintf("WHERE way && ST_Transform(ST_GeomFromText('%s', 4326), 3857)", poly)
 	query += getTagsFilter(tags)
+	query += getWayAreaFilter(minWayArea, maxWayArea)
 	query += "\nORDER BY distance"
 	return pool.Query(query)
 }
@@ -115,6 +133,16 @@ func getTagsFilter(tags map[string][]string) (filter string) {
 	return
 }
 
+func getWayAreaFilter(minWayArea, maxWayArea *float64) (filter string) {
+	if minWayArea != nil {
+		filter += fmt.Sprintf("\nAND way_area > %f", *minWayArea)
+	}
+	if maxWayArea != nil {
+		filter += fmt.Sprintf("\nAND way_area < %f", *maxWayArea)
+	}
+	return
+}
+
 func printResults(rows *sql.Rows) error {
 	colNames, err := rows.Columns()
 	if err != nil {
@@ -143,8 +171,16 @@ func printResult(colNames []string, colPtrs []interface{}, rows *sql.Rows) error
 		return fmt.Errorf("failed to read row: %s\n", err.Error())
 	}
 	for i, colName := range colNames {
-		if colName == "z_order" || colName == "way_area" || colName == "way" {
+		if colName == "z_order" || colName == "way" {
 			// Those columns are not for displaying.
+		} else if colName == "way_area" {
+			val := colPtrs[i].(*interface{})
+			valFloat, ok := (*val).(float64)
+			if ok {
+				fmt.Printf("%s: %f\n", colName, valFloat)
+			} else {
+				fmt.Printf("%s:\n", colName, valFloat)
+			}
 		} else if colName == "distance" {
 			val := colPtrs[i].(*interface{})
 			fmt.Printf("distance_meters: %.0f\n", (*val).(float64))

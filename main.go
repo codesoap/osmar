@@ -22,10 +22,7 @@ var pool *sql.DB
 func init() {
 	var err error
 	pool, err = sql.Open("pgx", "host=localhost port=5432 database=gis")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to open database connection: %s\n", err.Error())
-		os.Exit(1)
-	}
+	dieOnErr("Failed to open database connection: %s\n", err)
 }
 
 func main() {
@@ -41,33 +38,22 @@ func main() {
 	}
 
 	lat, err := strconv.ParseFloat(os.Args[2], 64)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not parse lat: %s\n", err.Error())
-		os.Exit(1)
-	}
+	dieOnErr("Could not parse lat: %s\n", err)
 	long, err := strconv.ParseFloat(os.Args[3], 64)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not parse long: %s\n", err.Error())
-		os.Exit(1)
-	}
+	dieOnErr("Could not parse long: %s\n", err)
 	radius, err := strconv.ParseFloat(os.Args[4], 64)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not parse radius: %s\n", err.Error())
-		os.Exit(1)
-	}
+	dieOnErr("Could not parse radius: %s\n", err)
 	tags, err := getTags()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not parse tags: %s\n", err.Error())
-		os.Exit(1)
-	}
+	dieOnErr("Could not parse tags: %s\n", err)
 
 	rows, err := queryDB(lat, long, radius, tags)
+	dieOnErr("Failed to query database: %s\n", err)
+	dieOnErr("Failed to print results: %s\n", printResults(rows))
+}
+
+func dieOnErr(msg string, err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to query database: %s\n", err.Error())
-		os.Exit(1)
-	}
-	if err = printResults(rows); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to print results: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, msg, err.Error())
 		os.Exit(1)
 	}
 }
@@ -77,7 +63,7 @@ func getTags() (map[string][]string, error) {
 	for _, tag := range os.Args[5:] {
 		split := strings.SplitN(tag, "=", 2)
 		if len(split) != 2 {
-			return tags, fmt.Errorf("tag without value: %s\n", tag)
+			return tags, fmt.Errorf("tag without value: %s", tag)
 		}
 		tags[split[0]] = append(tags[split[0]], split[1])
 	}

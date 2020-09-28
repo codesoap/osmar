@@ -13,6 +13,10 @@ go install
 # The binary is now at ~/go/bin/osmf.
 ```
 
+If you don't want to install the go compiler, you can download binaries
+from the
+[latest release page](https://github.com/codesoap/osmf/releases/tag/v1.0.0).
+
 # Examples
 ```console
 $ # Find all points within 50m of the center of Bremen, Germany:

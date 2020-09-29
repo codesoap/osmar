@@ -179,7 +179,7 @@ func printResult(colNames []string, colPtrs []interface{}, rows *sql.Rows) error
 			if ok {
 				fmt.Printf("%s: %f\n", colName, valFloat)
 			} else {
-				fmt.Printf("%s:\n", colName, valFloat)
+				fmt.Printf("%s:\n", colName)
 			}
 		} else if colName == "distance" {
 			val := colPtrs[i].(*interface{})

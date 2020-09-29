@@ -17,7 +17,7 @@ If you don't want to install the go compiler, you can download binaries
 from the
 [latest release page](https://github.com/codesoap/osmf/releases/tag/v1.0.0).
 
-# Examples
+# Basic Usage
 ```console
 $ # Find all points within 50m of the center of Bremen, Germany:
 $ osmf point 53.076 8.807 50
@@ -29,7 +29,7 @@ addr:housename:
 ...
 
 $ # Use UNIX tools to compact the output:
-$ osmf point 53.076 8.807 50 | awk '/^$/ /[^ ]*: ./'
+$ osmf point 53.076 8.807 50 | awk '/^$/ / ./'
 distance_meters: 10
 osm_id: 2523704361
 osm_link: https://www.openstreetmap.org/node/2523704361
@@ -44,7 +44,7 @@ name: Beck's am Markt
 ...
 
 $ # Find a bicycle shop near the center of Bremen:
-$ osmf point 53.076 8.807 500 shop=bicycle | awk '/^$/ /[^ ]*: ./'
+$ osmf point 53.076 8.807 500 shop=bicycle | awk '/^$/ / ./'
 distance_meters: 244
 osm_id: 834082330
 osm_link: https://www.openstreetmap.org/node/834082330
@@ -52,42 +52,33 @@ addr:housenumber: 30-32
 name: Velo-Sport
 operator: Velo-Sport Ihr Radsporthaus GmbH
 shop: bicycle
-
-$ # Find a natural forest of at least 1km² in Bremen:
-$ osmf polygon 53.076 8.807 3300 natural=wood 'way_area>1e+6' | awk '/^$/ /[^ ]*: ./'
-distance_meters: 3242
-osm_id: -1717327
-osm_link: https://www.openstreetmap.org/relation/1717327
-natural: wood
-way_area: 1663160.000000
-
-$ # Searching for multiple values of the same tag is also possible:
-$ osmf point 53.076 8.807 15000 sport=climbing sport=swimming | awk '/^$/ /[^ ]*: ./'
-distance_meters: 3169
-osm_id: 486137250
-osm_link: https://www.openstreetmap.org/node/486137250
-name: Klettergarten Bremen
-sport: climbing
-...
-distance_meters: 7048
-osm_id: 3063163381
-osm_link: https://www.openstreetmap.org/node/3063163381
-addr:housenumber: 160
-leisure: club
-name: Bremischer Schwimmverein e.V.
-sport: swimming;tennis
-
-$ # Pro tip: Use "_" to search for any value:
-$ osmf point 53.076 8.807 500 sport=_ | awk '/^$/ /[^ ]*: ./'
-distance_meters: 342
-osm_id: 4715819785
-osm_link: https://www.openstreetmap.org/node/4715819785
-name: Absolute Run
-shop: sports
-sport: running
 ```
 
-# Usage
+# More Examples
+```bash
+# Find a natural forest of at least 1km²:
+osmf polygon 53.076 8.807 3300 natural=wood 'way_area>1e+6' | awk '/^$/ / ./'
+
+# Find a bakery:
+osmf point 53.076 8.807 300 shop=bakery | awk '/^$/ / ./'
+
+# Find nearby public transport stations:
+osmf point 53.076 8.807 200 public_transport=stop_position | awk '/^$/ / ./'
+
+# Find nearby hiking routes:
+osmf line 53.076 8.807 1000 route=hiking | awk '/^$/ / ./'
+
+# Searching for multiple values of the same tag is also possible:
+osmf point 53.076 8.807 15000 sport=climbing sport=swimming | awk '/^$/ / ./'
+
+# Pro tip: Use "_" to search for any value:
+osmf point 53.076 8.807 500 sport=_ | awk '/^$/ / ./'
+
+# Learn about the population of the city and it's urban districts:
+osmf polygon 53.076 8.807 10000 population=_ | awk '/^$/ /^name/ /^population/ /^osm_link/'
+```
+
+# Full Usage Info
 ```
 osmf point <lat> <long> <radius_meter> [<tag>=<value>]...
 osmf line <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...

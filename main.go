@@ -5,19 +5,47 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-const usage = `Usage:
-osmf point <lat> <long> <radius_meter> [<tag>=<value>]...
-osmf line <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
-osmf polygon <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
-`
+const usage = "Usage: osmf <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]..."
 
 var pool *sql.DB
+
+type osmTableType int
+
+const (
+	osmPointTable = iota
+	osmLineTable
+	osmPolygonTable
+)
+
+// row represents one row of a query on the planet_osm_point,
+// planet_osm_line or planet_osm_polygon table.
+type row struct {
+	tableType osmTableType
+	distance  float64        // Distance to the given coordinates in meter.
+	values    []*interface{} // Values for all columns, including distance.
+}
+
+// results represents the SQL query results on the planet_osm_point,
+// planet_osm_line and planet_osm_polygon tables.
+type results struct {
+	pointColNames   []string
+	lineColNames    []string
+	polygonColNames []string
+	rows            []row
+}
+
+type byDistance []row
+
+func (a byDistance) Len() int           { return len(a) }
+func (a byDistance) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byDistance) Less(i, j int) bool { return a[i].distance < a[j].distance }
 
 func init() {
 	var err error
@@ -28,27 +56,23 @@ func init() {
 func main() {
 	defer pool.Close()
 
-	if len(os.Args) < 5 {
+	if len(os.Args) < 4 {
 		fmt.Fprintf(os.Stderr, usage)
 		os.Exit(1)
 	}
-	if os.Args[1] != "line" && os.Args[1] != "point" && os.Args[1] != "polygon" {
-		fmt.Fprintf(os.Stderr, "Invalid subcommand: %s\n", os.Args[1])
-		os.Exit(1)
-	}
-
-	lat, err := strconv.ParseFloat(os.Args[2], 64)
+	lat, err := strconv.ParseFloat(os.Args[1], 64)
 	dieOnErr("Could not parse lat: %s\n", err)
-	long, err := strconv.ParseFloat(os.Args[3], 64)
+	long, err := strconv.ParseFloat(os.Args[2], 64)
 	dieOnErr("Could not parse long: %s\n", err)
-	radius, err := strconv.ParseFloat(os.Args[4], 64)
+	radius, err := strconv.ParseFloat(os.Args[3], 64)
 	dieOnErr("Could not parse radius: %s\n", err)
 	tags, minWayArea, maxWayArea, err := getFilters()
 	dieOnErr("Could not parse filters: %s\n", err)
 
-	rows, err := queryDB(lat, long, radius, tags, minWayArea, maxWayArea)
+	res, err := getResults(lat, long, radius, tags, minWayArea, maxWayArea)
 	dieOnErr("Failed to query database: %s\n", err)
-	dieOnErr("Failed to print results: %s\n", printResults(rows))
+	sort.Sort(byDistance(res.rows))
+	printResults(res)
 }
 
 func dieOnErr(msg string, err error) {
@@ -60,7 +84,7 @@ func dieOnErr(msg string, err error) {
 
 func getFilters() (tags map[string][]string, minWayArea, maxWayArea *float64, err error) {
 	tags = make(map[string][]string)
-	for _, arg := range os.Args[5:] {
+	for _, arg := range os.Args[4:] {
 		if strings.HasPrefix(arg, "way_area>") {
 			var minWayAreaTmp float64
 			minWayAreaTmp, err = strconv.ParseFloat(arg[9:], 64)
@@ -87,15 +111,97 @@ func getFilters() (tags map[string][]string, minWayArea, maxWayArea *float64, er
 	return
 }
 
-func queryDB(lat, long, radius float64, tags map[string][]string, minWayArea, maxWayArea *float64) (*sql.Rows, error) {
+func getResults(lat, long, radius float64, tags map[string][]string, minWayArea, maxWayArea *float64) (results, error) {
+	var res results
+	var err error
+
+	// Certain tags don't appear in all tables:
+	_, skipPointsTable := tags["tracktype"]
+	_, skipLineAndPolygonTables := tags["capital"]
+	if _, ok := tags["ele"]; ok {
+		skipLineAndPolygonTables = true
+	}
+
+	if minWayArea == nil && maxWayArea == nil && !skipPointsTable {
+		// Search for results in the planet_osm_point table:
+		points, err := queryDB(lat, long, radius, tags, nil, nil, "point")
+		if err != nil {
+			return res, err
+		}
+		if res.pointColNames, err = points.Columns(); err != nil {
+			return res, fmt.Errorf("failed to read col names: %s\n", err.Error())
+		}
+		err = fillRowsOfType(points, &res.rows, len(res.pointColNames), osmPointTable)
+		if err != nil {
+			return res, err
+		}
+	}
+
+	if !skipLineAndPolygonTables {
+		// Search for results in the planet_osm_line table:
+		lines, err := queryDB(lat, long, radius, tags, minWayArea, maxWayArea, "line")
+		if err != nil {
+			return res, err
+		}
+		if res.lineColNames, err = lines.Columns(); err != nil {
+			return res, fmt.Errorf("failed to read col names: %s\n", err.Error())
+		}
+		err = fillRowsOfType(lines, &res.rows, len(res.lineColNames), osmLineTable)
+		if err != nil {
+			return res, err
+		}
+
+		// Search for results in the planet_osm_polygon table:
+		polygons, err := queryDB(lat, long, radius, tags, minWayArea, maxWayArea, "polygon")
+		if err != nil {
+			return res, err
+		}
+		if res.polygonColNames, err = polygons.Columns(); err != nil {
+			return res, fmt.Errorf("failed to read col names: %s\n", err.Error())
+		}
+		err = fillRowsOfType(polygons, &res.rows, len(res.polygonColNames), osmPolygonTable)
+	}
+	return res, err
+}
+
+func fillRowsOfType(dbRows *sql.Rows, resRows *[]row, colCnt int, resType osmTableType) error {
+	for i := 0; dbRows.Next(); i += 1 {
+		cols := make([]interface{}, colCnt)
+		colPtrs := make([]interface{}, colCnt)
+		for i := range cols {
+			colPtrs[i] = &cols[i]
+		}
+		if err := dbRows.Scan(colPtrs...); err != nil {
+			return fmt.Errorf("failed to read row: %s", err.Error())
+		}
+		var row row
+		row.tableType = resType
+		row.values = make([]*interface{}, colCnt)
+		for i := range colPtrs {
+			if i == 0 {
+				// First column is always the distance.
+				val := colPtrs[i].(*interface{})
+				valFloat, ok := (*val).(float64)
+				if !ok {
+					return fmt.Errorf("failed to read distance")
+				}
+				row.distance = valFloat
+			}
+			row.values[i] = colPtrs[i].(*interface{})
+		}
+		*resRows = append(*resRows, row)
+	}
+	return nil
+}
+
+func queryDB(lat, long, radius float64, tags map[string][]string, minWayArea, maxWayArea *float64, table string) (*sql.Rows, error) {
 	refPoint := fmt.Sprintf("ST_SetSRID(ST_Point(%f, %f), 4326)::geography", long, lat)
 	distance := fmt.Sprintf("ST_Distance(ST_Transform(way, 4326)::geography, %s) AS distance", refPoint)
-	query := fmt.Sprintf("SELECT %s, * FROM planet_osm_%s\n", distance, os.Args[1])
+	query := fmt.Sprintf("SELECT %s, * FROM planet_osm_%s\n", distance, table)
 	poly := getBoundaryPolygon(lat, long, radius)
 	query += fmt.Sprintf("WHERE way && ST_Transform(ST_GeomFromText('%s', 4326), 3857)", poly)
 	query += getTagsFilter(tags)
 	query += getWayAreaFilter(minWayArea, maxWayArea)
-	query += "\nORDER BY distance"
 	return pool.Query(query)
 }
 
@@ -143,52 +249,49 @@ func getWayAreaFilter(minWayArea, maxWayArea *float64) (filter string) {
 	return
 }
 
-func printResults(rows *sql.Rows) error {
-	colNames, err := rows.Columns()
-	if err != nil {
-		return fmt.Errorf("failed to read col names: %s\n", err.Error())
-	}
-	cols := make([]interface{}, len(colNames))
-	colPtrs := make([]interface{}, len(colNames))
-	for i := range cols {
-		colPtrs[i] = &cols[i]
-	}
+func printResults(res results) {
 	firstRow := true
-	for rows.Next() {
+	for _, resRow := range res.rows {
 		if !firstRow {
 			fmt.Println("")
 		}
-		if err = printResult(colNames, colPtrs, rows); err != nil {
-			return err
+		switch resRow.tableType {
+		case osmPointTable:
+			printResult(res.pointColNames, resRow)
+		case osmLineTable:
+			printResult(res.lineColNames, resRow)
+		case osmPolygonTable:
+			printResult(res.polygonColNames, resRow)
 		}
 		firstRow = false
 	}
-	return nil
 }
 
-func printResult(colNames []string, colPtrs []interface{}, rows *sql.Rows) error {
-	if err := rows.Scan(colPtrs...); err != nil {
-		return fmt.Errorf("failed to read row: %s\n", err.Error())
+func printResult(colNames []string, resRow row) {
+	switch resRow.tableType {
+	case osmPointTable:
+		fmt.Printf("table: planet_osm_point\n")
+	case osmLineTable:
+		fmt.Printf("table: planet_osm_line\n")
+	case osmPolygonTable:
+		fmt.Printf("table: planet_osm_polygon\n")
 	}
 	for i, colName := range colNames {
 		if colName == "z_order" || colName == "way" {
 			// Those columns are not for displaying.
 		} else if colName == "way_area" {
-			val := colPtrs[i].(*interface{})
-			valFloat, ok := (*val).(float64)
+			valFloat, ok := (*resRow.values[i]).(float64)
 			if ok {
 				fmt.Printf("%s: %f\n", colName, valFloat)
 			} else {
 				fmt.Printf("%s:\n", colName)
 			}
 		} else if colName == "distance" {
-			val := colPtrs[i].(*interface{})
-			fmt.Printf("distance_meters: %.0f\n", (*val).(float64))
+			fmt.Printf("distance_meters: %.0f\n", (*resRow.values[i]).(float64))
 		} else if colName == "osm_id" {
-			val := colPtrs[i].(*interface{})
-			id := (*val).(int64)
+			id := (*resRow.values[i]).(int64)
 			fmt.Printf("%s: %d\n", colName, id)
-			if os.Args[1] == "point" {
+			if resRow.tableType == osmPointTable {
 				fmt.Printf("osm_link: https://www.openstreetmap.org/node/%d\n", id)
 			} else {
 				// Relations have negative IDs.
@@ -200,10 +303,8 @@ func printResult(colNames []string, colPtrs []interface{}, rows *sql.Rows) error
 				}
 			}
 		} else {
-			val := colPtrs[i].(*interface{})
-			valString, _ := (*val).(string) // Second return value is used to accept nil.
+			valString, _ := (*resRow.values[i]).(string) // Second return value is used to accept nil.
 			fmt.Printf("%s: %s\n", colName, valString)
 		}
 	}
-	return nil
 }

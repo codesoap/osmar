@@ -19,34 +19,36 @@ from the
 
 # Basic Usage
 ```console
-$ # Find all points within 50m of the center of Bremen, Germany:
-$ osmf point 53.076 8.807 50
-distance_meters: 10
-osm_id: 2523704361
-osm_link: https://www.openstreetmap.org/node/2523704361
+$ # Find all entries within 50m of the center of Bremen, Germany:
+$ osmf 53.076 8.807 50
+table: planet_osm_polygon
+distance_meters: 0
+osm_id: -3133460
+osm_link: https://www.openstreetmap.org/relation/3133460
 access:
 addr:housename:
 ...
 
 $ # Use UNIX tools to compact the output:
-$ osmf point 53.076 8.807 50 | awk '/^$/ / ./'
-distance_meters: 10
-osm_id: 2523704361
-osm_link: https://www.openstreetmap.org/node/2523704361
-barrier: bollard
+$ osmf 53.076 8.807 50 | awk '/^(table|osm_id):/ {next} /^$/ / ./'
+distance_meters: 0
+osm_link: https://www.openstreetmap.org/relation/3133460
+boundary: political
+name: Bremen I
+ref: 54
+way_area: 427011008.000000
 
-distance_meters: 11
-osm_id: 699745130
-osm_link: https://www.openstreetmap.org/node/699745130
-addr:housenumber: 1
-amenity: restaurant
-name: Beck's am Markt
+distance_meters: 0
+osm_link: https://www.openstreetmap.org/relation/4496501
+access: green_sticker_germany
+boundary: low_emission_zone
+name: Umweltzone Bremen
+way_area: 19706300.000000
 ...
 
 $ # Find a bicycle shop near the center of Bremen:
-$ osmf point 53.076 8.807 500 shop=bicycle | awk '/^$/ / ./'
+$ osmf 53.076 8.807 500 shop=bicycle | awk '/^(table|osm_id):/ {next} /^$/ / ./'
 distance_meters: 244
-osm_id: 834082330
 osm_link: https://www.openstreetmap.org/node/834082330
 addr:housenumber: 30-32
 name: Velo-Sport
@@ -57,32 +59,30 @@ shop: bicycle
 # More Examples
 ```bash
 # Find a natural forest of at least 1km²:
-osmf polygon 53.076 8.807 3300 natural=wood 'way_area>1e+6' | awk '/^$/ / ./'
+osmf 53.076 8.807 3300 natural=wood 'way_area>1e+6' | awk '/^$/ / ./'
 
 # Find a bakery:
-osmf point 53.076 8.807 300 shop=bakery | awk '/^$/ / ./'
+osmf 53.076 8.807 200 shop=bakery | awk '/^$/ / ./'
 
 # Find nearby public transport stations:
-osmf point 53.076 8.807 200 public_transport=stop_position | awk '/^$/ / ./'
+osmf 53.076 8.807 200 public_transport=stop_position | awk '/^$/ / ./'
 
 # Find nearby hiking routes:
-osmf line 53.076 8.807 1000 route=hiking | awk '/^$/ / ./'
+osmf 53.076 8.807 500 route=hiking | awk '/^$/ / ./'
 
 # Searching for multiple values of the same tag is also possible:
-osmf point 53.076 8.807 15000 sport=climbing sport=swimming | awk '/^$/ / ./'
+osmf 53.076 8.807 3000 sport=climbing sport=swimming | awk '/^$/ / ./'
 
 # Pro tip: Use "_" to search for any value:
-osmf point 53.076 8.807 500 sport=_ | awk '/^$/ / ./'
+osmf 53.076 8.807 500 sport=_ | awk '/^$/ / ./'
 
 # Learn about the population of the city and it's urban districts:
-osmf polygon 53.076 8.807 10000 population=_ | awk '/^$/ /^name/ /^population/ /^osm_link/'
+osmf 53.076 8.807 10000 population=_ | awk '/^$/ /^name/ /^population/ /^osm_link/'
 ```
 
 # Full Usage Info
 ```
-osmf point <lat> <long> <radius_meter> [<tag>=<value>]...
-osmf line <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
-osmf polygon <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
+osmf <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
 
 General tags:
 - access

@@ -12,7 +12,9 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-const usage = "Usage: osmf <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]..."
+const usage = `Usage: osmf <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
+Info about tags: https://wiki.openstreetmap.org/wiki/Map_Features
+`
 
 var pool *sql.DB
 

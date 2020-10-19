@@ -25,20 +25,14 @@ table: planet_osm_polygon
 distance_meters: 0
 osm_id: -3133460
 osm_link: https://www.openstreetmap.org/relation/3133460
-access:
-addr:housename:
-...
-
-$ # Use UNIX tools to compact the output:
-$ osmf 53.076 8.807 50 | awk '/^(table|osm_id):/ {next} /^$/ / ./'
-distance_meters: 0
-osm_link: https://www.openstreetmap.org/relation/3133460
 boundary: political
 name: Bremen I
 ref: 54
 way_area: 427011008.000000
 
+table: planet_osm_polygon
 distance_meters: 0
+osm_id: -4496501
 osm_link: https://www.openstreetmap.org/relation/4496501
 access: green_sticker_germany
 boundary: low_emission_zone
@@ -46,8 +40,19 @@ name: Umweltzone Bremen
 way_area: 19706300.000000
 ...
 
+$ # Use UNIX tools to compact the output:
+$ osmf 53.076 8.807 50 | awk '/^$/ /^(distance|osm_link|name)/'
+distance_meters: 0
+osm_link: https://www.openstreetmap.org/relation/3133460
+name: Bremen I
+
+distance_meters: 0
+osm_link: https://www.openstreetmap.org/relation/4496501
+name: Umweltzone Bremen
+...
+
 $ # Find a bicycle shop near the center of Bremen:
-$ osmf 53.076 8.807 500 shop=bicycle | awk '/^(table|osm_id):/ {next} /^$/ / ./'
+$ osmf 53.076 8.807 500 shop=bicycle | awk '/^(table|osm_id):/ {next} //'
 distance_meters: 244
 osm_link: https://www.openstreetmap.org/node/834082330
 addr:housenumber: 30-32
@@ -59,25 +64,25 @@ shop: bicycle
 # More Examples
 ```bash
 # Find a natural forest of at least 1km²:
-osmf 53.076 8.807 3300 natural=wood 'way_area>1e+6' | awk '/^$/ / ./'
+osmf 53.076 8.807 3300 natural=wood 'way_area>1e+6'
 
 # Find a bakery:
-osmf 53.076 8.807 200 shop=bakery | awk '/^$/ / ./'
+osmf 53.076 8.807 200 shop=bakery
 
 # Find nearby public transport stations:
-osmf 53.076 8.807 200 public_transport=stop_position | awk '/^$/ / ./'
+osmf 53.076 8.807 200 public_transport=stop_position
 
 # Find nearby hiking routes:
-osmf 53.076 8.807 500 route=hiking | awk '/^$/ / ./'
+osmf 53.076 8.807 500 route=hiking
 
 # Searching for multiple values of the same tag is also possible:
-osmf 53.076 8.807 3000 sport=climbing sport=swimming | awk '/^$/ / ./'
+osmf 53.076 8.807 3000 sport=climbing sport=swimming
 
 # Pro tip: Use "_" to search for any value:
-osmf 53.076 8.807 500 sport=_ | awk '/^$/ / ./'
+osmf 53.076 8.807 500 sport=_
 
 # Learn about the population of the city and it's urban districts:
-osmf 53.076 8.807 10000 population=_ | awk '/^$/ /^name/ /^population/ /^osm_link/'
+osmf 53.076 8.807 10000 population=_
 ```
 
 # Full Usage Info

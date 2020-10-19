@@ -15,7 +15,7 @@ go install
 
 If you don't want to install the go compiler, you can download binaries
 from the
-[latest release page](https://github.com/codesoap/osmf/releases/tag/v1.1.0).
+[latest release page](https://github.com/codesoap/osmf/releases/tag/v2.0.0).
 
 # Basic Usage
 ```console

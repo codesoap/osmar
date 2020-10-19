@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"math"
 	"os"
@@ -12,9 +13,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-const usage = `Usage: osmf <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
-Info about tags: https://wiki.openstreetmap.org/wiki/Map_Features
-`
+var verbose = flag.Bool("v", false, "verbose mode; also output empty values")
 
 var pool *sql.DB
 
@@ -53,20 +52,30 @@ func init() {
 	var err error
 	pool, err = sql.Open("pgx", "host=localhost port=5432 database=gis")
 	dieOnErr("Failed to open database connection: %s\n", err)
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `Usage:
+osmf [-v] <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
+Options:
+	-v verbose mode; also output empty values
+Info about tags: https://wiki.openstreetmap.org/wiki/Map_Features
+`)
+	}
+	flag.Parse()
 }
 
 func main() {
 	defer pool.Close()
 
-	if len(os.Args) < 4 {
-		fmt.Fprintf(os.Stderr, usage)
+	if len(flag.Args()) < 3 {
+		flag.Usage()
 		os.Exit(1)
 	}
-	lat, err := strconv.ParseFloat(os.Args[1], 64)
+	lat, err := strconv.ParseFloat(flag.Arg(0), 64)
 	dieOnErr("Could not parse lat: %s\n", err)
-	long, err := strconv.ParseFloat(os.Args[2], 64)
+	long, err := strconv.ParseFloat(flag.Arg(1), 64)
 	dieOnErr("Could not parse long: %s\n", err)
-	radius, err := strconv.ParseFloat(os.Args[3], 64)
+	radius, err := strconv.ParseFloat(flag.Arg(2), 64)
 	dieOnErr("Could not parse radius: %s\n", err)
 	tags, minWayArea, maxWayArea, err := getFilters()
 	dieOnErr("Could not parse filters: %s\n", err)
@@ -86,7 +95,7 @@ func dieOnErr(msg string, err error) {
 
 func getFilters() (tags map[string][]string, minWayArea, maxWayArea *float64, err error) {
 	tags = make(map[string][]string)
-	for _, arg := range os.Args[4:] {
+	for _, arg := range flag.Args()[3:] {
 		if strings.HasPrefix(arg, "way_area>") {
 			var minWayAreaTmp float64
 			minWayAreaTmp, err = strconv.ParseFloat(arg[9:], 64)
@@ -285,7 +294,7 @@ func printResult(colNames []string, resRow row) {
 			valFloat, ok := (*resRow.values[i]).(float64)
 			if ok {
 				fmt.Printf("%s: %f\n", colName, valFloat)
-			} else {
+			} else if *verbose {
 				fmt.Printf("%s:\n", colName)
 			}
 		} else if colName == "distance" {
@@ -306,7 +315,9 @@ func printResult(colNames []string, resRow row) {
 			}
 		} else {
 			valString, _ := (*resRow.values[i]).(string) // Second return value is used to accept nil.
-			fmt.Printf("%s: %s\n", colName, valString)
+			if len(valString) > 0 || *verbose {
+				fmt.Printf("%s: %s\n", colName, valString)
+			}
 		}
 	}
 }

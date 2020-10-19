@@ -3,7 +3,7 @@ osm data.
 
 See also:
 - https://github.com/openstreetmap/osm2pgsql#usage
-- https://www.volkerschatz.com/net/osm/osm2pgsql-db.html (partially deprecated)
+- https://www.volkerschatz.com/net/osm/osm2pgsql-db.html
 
 # Dependencies
 ```text

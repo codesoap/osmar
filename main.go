@@ -231,7 +231,7 @@ func getTagsFilter(tags map[string][]string) (filter string) {
 			tag = strings.ReplaceAll(tag, `"`, "")
 			value = strings.ReplaceAll(value, `'`, "")
 
-			filter += fmt.Sprintf(` "%s" LIKE '%%%s%%'`, tag, value)
+			filter += fmt.Sprintf(` LOWER("%s") LIKE LOWER('%%%s%%')`, tag, value)
 			if len(values) > i+1 {
 				filter += " OR"
 			}

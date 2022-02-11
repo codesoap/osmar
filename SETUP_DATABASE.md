@@ -16,7 +16,7 @@ osm2pgsql
 ```bash
 initdb -D data
 
-# Start the database server; leave this running and contiue in another
+# Start the database server; leave this running and continue in another
 # terminal:
 postgres -D data
 
@@ -25,7 +25,7 @@ psql -d gis -c 'CREATE EXTENSION postgis;'
 ```
 
 # Filling the database with osm data
-Use one of the following two code blocks to get started; the examles
+Use one of the following two code blocks to get started; the examples
 in the README file works for `bremen-latest.osm.pbf`. When everything
 worked out, you can start playing around with bigger `*.pbf` files,
 like Sweden, the USA or even the whole planet. You can find those

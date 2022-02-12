@@ -226,13 +226,15 @@ func getBoundaryPolygon(lat, long, radius float64) string {
 }
 
 func getTagsFilter(tags map[string][]string) (filter string, params []interface{}) {
+	paramIndex := 1
 	for tag, values := range tags {
 		filter += "\nAND ("
 		for i, value := range values {
 			// FIXME: Update when https://github.com/golang/go/issues/18478 is fixed.
 			tag = nonColumNameRe.ReplaceAllString(tag, "")
 
-			filter += fmt.Sprintf(` LOWER("%s") LIKE LOWER('%%' || $%d || '%%')`, tag, i+1)
+			filter += fmt.Sprintf(` LOWER("%s") LIKE LOWER('%%' || $%d || '%%')`, tag, paramIndex)
+			paramIndex++
 			params = append(params, value)
 			if len(values) > i+1 {
 				filter += " OR"

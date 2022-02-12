@@ -53,7 +53,7 @@ func (a byDistance) Less(i, j int) bool { return a[i].distance < a[j].distance }
 
 func init() {
 	var err error
-	pool, err = sql.Open("pgx", "host=localhost port=5432 database=gis")
+	pool, err = sql.Open("pgx", dataSourceName)
 	dieOnErr("Failed to open database connection: %s\n", err)
 }
 
@@ -213,12 +213,11 @@ func queryDB(lat, long, radius float64, tags map[string][]string, minWayArea, ma
 func getBoundaryPolygon(lat, long, radius float64) string {
 	radiusDeg := radius / 111000 // One degree is ca. 111km
 	poly := "POLYGON(("
-	corners := 8
-	for i := 0; i <= corners; i += 1 {
-		cornerLat := lat + radiusDeg*math.Sin(2*math.Pi*float64(i)/float64(corners))
-		cornerLong := long + radiusDeg*math.Cos(2*math.Pi*float64(i)/float64(corners))
+	for i := 0; i <= boundaryPolygonCorners; i += 1 {
+		cornerLat := lat + radiusDeg*math.Sin(2*math.Pi*float64(i)/float64(boundaryPolygonCorners))
+		cornerLong := long + radiusDeg*math.Cos(2*math.Pi*float64(i)/float64(boundaryPolygonCorners))
 		poly += fmt.Sprintf(" %f %f", cornerLong, cornerLat)
-		if corners > i {
+		if boundaryPolygonCorners > i {
 			poly += ","
 		}
 	}

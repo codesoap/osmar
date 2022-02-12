@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,6 +18,7 @@ Info about tags: https://wiki.openstreetmap.org/wiki/Map_Features
 `
 
 var pool *sql.DB
+var nonColumNameRe = regexp.MustCompile(`[^a-zA-Z_:]+`)
 
 type osmTableType int
 
@@ -202,9 +204,10 @@ func queryDB(lat, long, radius float64, tags map[string][]string, minWayArea, ma
 	query := fmt.Sprintf("SELECT %s, * FROM planet_osm_%s\n", distance, table)
 	poly := getBoundaryPolygon(lat, long, radius)
 	query += fmt.Sprintf("WHERE way && ST_Transform(ST_GeomFromText('%s', 4326), 3857)", poly)
-	query += getTagsFilter(tags)
+	tagsFilter, params := getTagsFilter(tags)
+	query += tagsFilter
 	query += getWayAreaFilter(minWayArea, maxWayArea)
-	return pool.Query(query)
+	return pool.Query(query, params...)
 }
 
 func getBoundaryPolygon(lat, long, radius float64) string {
@@ -223,15 +226,15 @@ func getBoundaryPolygon(lat, long, radius float64) string {
 	return poly
 }
 
-func getTagsFilter(tags map[string][]string) (filter string) {
+func getTagsFilter(tags map[string][]string) (filter string, params []interface{}) {
 	for tag, values := range tags {
 		filter += "\nAND ("
 		for i, value := range values {
-			// Poor mans SQL escaping for simplicity:
-			tag = strings.ReplaceAll(tag, `"`, "")
-			value = strings.ReplaceAll(value, `'`, "")
+			// FIXME: Update when https://github.com/golang/go/issues/18478 is fixed.
+			tag = nonColumNameRe.ReplaceAllString(tag, "")
 
-			filter += fmt.Sprintf(` LOWER("%s") LIKE LOWER('%%%s%%')`, tag, value)
+			filter += fmt.Sprintf(` LOWER("%s") LIKE LOWER('%%' || $%d || '%%')`, tag, i+1)
+			params = append(params, value)
 			if len(values) > i+1 {
 				filter += " OR"
 			}

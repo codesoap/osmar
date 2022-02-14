@@ -53,7 +53,13 @@ func (a byDistance) Less(i, j int) bool { return a[i].distance < a[j].distance }
 
 func init() {
 	var err error
-	pool, err = sql.Open("pgx", dataSourceName)
+	var connstr string
+	var present bool
+	connstr, present = os.LookupEnv("OSMF_CONN")
+	if !present {
+		connstr = "host=localhost port=5432 database=gis"
+	}
+	pool, err = sql.Open("pgx", connstr)
 	dieOnErr("Failed to open database connection: %s\n", err)
 }
 

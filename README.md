@@ -60,6 +60,13 @@ name: Velo-Sport
 operator: Velo-Sport Ihr Radsporthaus GmbH
 shop: bicycle
 ```
+# Custom Db Connection String
+osmf allows for passing a custom connection string via `OSMF_CONN` environment variable.
+example
+```shell
+OSMF_CONN='postgres://postgres:mysecretpassword@localhost:5432/gis' ./osmf 53.076 8.807 50
+```
+For more info on pgx connection strings see [pgx docs](https://github.com/jackc/pgx).
 
 # More Examples
 ```bash

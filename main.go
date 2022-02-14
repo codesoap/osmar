@@ -15,6 +15,9 @@ import (
 
 const usage = `Usage: osmf <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
 Info about tags: https://wiki.openstreetmap.org/wiki/Map_Features
+
+Environment:
+	OSMF_CONN  Custom connection string for the PostgreSQL database.
 `
 
 var pool *sql.DB
@@ -52,6 +55,10 @@ func (a byDistance) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byDistance) Less(i, j int) bool { return a[i].distance < a[j].distance }
 
 func init() {
+	dataSourceName := os.Getenv("OSMF_CONN")
+	if dataSourceName == "" {
+		dataSourceName = defaultDataSourceName
+	}
 	var err error
 	pool, err = sql.Open("pgx", dataSourceName)
 	dieOnErr("Failed to open database connection: %s\n", err)

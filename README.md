@@ -85,82 +85,94 @@ osmf 53.076 8.807 500 sport=_
 osmf 53.076 8.807 10000 population=_
 ```
 
+# Custom Database Connection
+A custom database connection can be used by setting
+the `OSMF_CONN` environment variable; find more info
+[here](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING):
+
+```console
+OSMF_CONN='postgres://user:password@localhost:5432/gis' osmf 53.076 8.807 50
+```
+
 # Full Usage Info
 ```
 osmf <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
 
+Environment:
+	OSMF_CONN  Custom connection string for the PostgreSQL database.
+
 General tags:
-- access
-- addr:housename
-- addr:housenumber
-- addr:interpolation
-- admin_level
-- aerialway
-- aeroway
-- amenity
-- area
-- barrier
-- bicycle
-- brand
-- bridge
-- boundary
-- building
-- construction
-- covered
-- culvert
-- cutting
-- denomination
-- disused
-- embankment
-- foot
-- generator:source
-- harbour
-- highway
-- historic
-- horse
-- intermittent
-- junction
-- landuse
-- layer
-- leisure
-- lock
-- man_made
-- military
-- motorcar
-- name
-- natural
-- office
-- oneway
-- operator
-- place
-- population
-- power
-- power_source
-- public_transport
-- railway
-- ref
-- religion
-- route
-- service
-- shop
-- sport
-- surface
-- toll
-- tourism
-- tower:type
-- tunnel
-- water
-- waterway
-- wetland
-- width
-- wood
+	access
+	addr:housename
+	addr:housenumber
+	addr:interpolation
+	admin_level
+	aerialway
+	aeroway
+	amenity
+	area
+	barrier
+	bicycle
+	brand
+	bridge
+	boundary
+	building
+	construction
+	covered
+	culvert
+	cutting
+	denomination
+	disused
+	embankment
+	foot
+	generator:source
+	harbour
+	highway
+	historic
+	horse
+	intermittent
+	junction
+	landuse
+	layer
+	leisure
+	lock
+	man_made
+	military
+	motorcar
+	name
+	natural
+	office
+	oneway
+	operator
+	place
+	population
+	power
+	power_source
+	public_transport
+	railway
+	ref
+	religion
+	route
+	service
+	shop
+	sport
+	surface
+	toll
+	tourism
+	tower:type
+	tunnel
+	water
+	waterway
+	wetland
+	width
+	wood
 
 Tags only for lines and polygons:
-- tracktype
+	tracktype
 
 Tags only for for points:
-- capital
-- ele
+	capital
+	ele
 ```
 
 The tags are explained

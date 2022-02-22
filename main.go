@@ -31,16 +31,16 @@ const (
 	osmPolygonTable
 )
 
-// row represents one row of a query on the planet_osm_point,
-// planet_osm_line or planet_osm_polygon table.
+// row represents one row of a query on the point, line or polygon
+// table.
 type row struct {
 	tableType osmTableType
 	distance  float64        // Distance to the given coordinates in meter.
 	values    []*interface{} // Values for all columns, including distance.
 }
 
-// results represents the SQL query results on the planet_osm_point,
-// planet_osm_line and planet_osm_polygon tables.
+// results represents the SQL query results on the point, line and
+// polygon tables.
 type results struct {
 	pointColNames   []string
 	lineColNames    []string
@@ -134,7 +134,7 @@ func getResults(lat, long, radius float64, tags map[string][]string, minWayArea,
 	}
 
 	if minWayArea == nil && maxWayArea == nil && !skipPointsTable {
-		// Search for results in the planet_osm_point table:
+		// Search for results in the point table:
 		points, err := queryDB(lat, long, radius, tags, nil, nil, "point")
 		if err != nil {
 			return res, err
@@ -149,7 +149,7 @@ func getResults(lat, long, radius float64, tags map[string][]string, minWayArea,
 	}
 
 	if !skipLineAndPolygonTables {
-		// Search for results in the planet_osm_line table:
+		// Search for results in the line table:
 		lines, err := queryDB(lat, long, radius, tags, minWayArea, maxWayArea, "line")
 		if err != nil {
 			return res, err
@@ -162,7 +162,7 @@ func getResults(lat, long, radius float64, tags map[string][]string, minWayArea,
 			return res, err
 		}
 
-		// Search for results in the planet_osm_polygon table:
+		// Search for results in the polygon table:
 		polygons, err := queryDB(lat, long, radius, tags, minWayArea, maxWayArea, "polygon")
 		if err != nil {
 			return res, err
@@ -208,7 +208,7 @@ func fillRowsOfType(dbRows *sql.Rows, resRows *[]row, colCnt int, resType osmTab
 func queryDB(lat, long, radius float64, tags map[string][]string, minWayArea, maxWayArea *float64, table string) (*sql.Rows, error) {
 	refPoint := fmt.Sprintf("ST_SetSRID(ST_Point(%f, %f), 4326)::geography", long, lat)
 	distance := fmt.Sprintf("ST_Distance(ST_Transform(way, 4326)::geography, %s) AS distance", refPoint)
-	query := fmt.Sprintf("SELECT %s, * FROM planet_osm_%s\n", distance, table)
+	query := fmt.Sprintf("SELECT %s, * FROM %s_%s\n", distance, tablePrefix, table)
 	poly := getBoundaryPolygon(lat, long, radius)
 	query += fmt.Sprintf("WHERE way && ST_Transform(ST_GeomFromText('%s', 4326), 3857)", poly)
 	tagsFilter, params := getTagsFilter(tags)
@@ -283,11 +283,11 @@ func printResults(res results) {
 func printResult(colNames []string, resRow row) {
 	switch resRow.tableType {
 	case osmPointTable:
-		fmt.Printf("table: planet_osm_point\n")
+		fmt.Printf("table: %s_point\n", tablePrefix)
 	case osmLineTable:
-		fmt.Printf("table: planet_osm_line\n")
+		fmt.Printf("table: %s_line\n", tablePrefix)
 	case osmPolygonTable:
-		fmt.Printf("table: planet_osm_polygon\n")
+		fmt.Printf("table: %s_polygon\n", tablePrefix)
 	}
 	for i, colName := range colNames {
 		if colName == "z_order" || colName == "way" {

@@ -1,4 +1,4 @@
-module github.com/codesoap/osmf
+module github.com/codesoap/osmar
 
 go 1.13
 

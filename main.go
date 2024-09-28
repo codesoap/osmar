@@ -218,6 +218,8 @@ func queryDB(lat, long, radius float64, tags map[string][]string, minWayArea, ma
 }
 
 func getBoundaryPolygon(lat, long, radius float64) string {
+	// FIXME: This is just wrong. The longitudal lenght stongly
+	//        depends on the latitude.
 	radiusDeg := radius / 111000 // One degree is ca. 111km
 	poly := "POLYGON(("
 	for i := 0; i <= boundaryPolygonCorners; i += 1 {

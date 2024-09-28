@@ -1,71 +1,77 @@
-A small tool for playing around with osm databases (those resulting
-from `osm2pgsql`). Read `SETUP_DATABASE.md` to learn how to set up the
-required database.
-
-Note that `osm2pgsql` by default does not put all available tags into
-the database and osmar only deals with this limited tag-set.
+A small tool for querying osm data from PBF files.
 
 # Installation
 ```bash
-git clone git@github.com:codesoap/osmar.git
-cd osmar
-go install
+go install github.com/codesoap/osmar/v3@latest
 # The binary is now at ~/go/bin/osmar.
 ```
 
-If you don't want to install the go compiler, you can download binaries
-from the
-[latest release page](https://github.com/codesoap/osmar/releases/tag/v2.1.0).
-
 # Basic Usage
+Before you can use osmar, you must set the environment variable
+`OSMAR_PBF_FILE`; it must contain the path to a PBF
+file. These files can be downloaded, for example, from
+[download.geofabrik.de](https://download.geofabrik.de/). An example would be:
+```console
+$ cd /tmp
+$ wget 'https://download.geofabrik.de/europe/germany/bremen-latest.osm.pbf'
+$ export OSMAR_PBF_FILE='/tmp/bremen-latest.osm.pbf'
+```
+
 ```console
 $ # Find all entries within 50m of the center of Bremen, Germany:
 $ osmar 53.076 8.807 50
-table: planet_osm_polygon
-distance_meters: 0
-osm_id: -3133460
-osm_link: https://www.openstreetmap.org/relation/3133460
-boundary: political
-name: Bremen I
-ref: 54
-way_area: 427011008.000000
+meta:distance: 5m
+meta:id: 163740903
+meta:type: way
+meta:link: https://www.openstreetmap.org/way/163740903
+addr:city: Bremen
+addr:country: DE
+addr:housenumber: 1
+addr:postcode: 28195
+addr:street: Am Markt
+building: retail
+...
 
-table: planet_osm_polygon
-distance_meters: 0
-osm_id: -4496501
-osm_link: https://www.openstreetmap.org/relation/4496501
-access: green_sticker_germany
-boundary: low_emission_zone
-name: Umweltzone Bremen
-way_area: 19706300.000000
+$ # Filter by tags to find a bicycle shop near the center of Bremen:
+$ osmar 53.076 8.807 500 shop=bicycle
+meta:distance: 243m
+meta:id: 834082330
+meta:type: node
+meta:link: https://www.openstreetmap.org/node/834082330
+addr:city: Bremen
+addr:country: DE
+addr:housenumber: 30-32
+addr:postcode: 28195
+addr:street: Martinistraße
+check_date:opening_hours: 2024-04-28
+email: velo-sport@nord-com.net
+fax: +49 421 18225
+name: Velo-Sport
 ...
 
 $ # Use UNIX tools to compact the output:
-$ osmar 53.076 8.807 50 | awk '/^$/ /^(distance|osm_link|name)/'
-distance_meters: 0
-osm_link: https://www.openstreetmap.org/relation/3133460
-name: Bremen I
+$ osmar 53.076 8.807 200 shop=clothes | grep -e '^$' -e distance -e meta:link -e name
+meta:distance: 65m
+meta:link: https://www.openstreetmap.org/node/410450005
+name: Peek & Cloppenburg
+short_name: P&C
 
-distance_meters: 0
-osm_link: https://www.openstreetmap.org/relation/4496501
-name: Umweltzone Bremen
+meta:distance: 98m
+meta:link: https://www.openstreetmap.org/node/3560745513
+name: CALIDA
+
+meta:distance: 99m
+meta:link: https://www.openstreetmap.org/node/718963532
+name: zero
 ...
-
-$ # Find a bicycle shop near the center of Bremen:
-$ osmar 53.076 8.807 500 shop=bicycle | awk '/^(table|osm_id):/ {next} //'
-distance_meters: 244
-osm_link: https://www.openstreetmap.org/node/834082330
-addr:housenumber: 30-32
-name: Velo-Sport
-operator: Velo-Sport Ihr Radsporthaus GmbH
-shop: bicycle
 ```
 
 # More Examples
-```bash
-# Find a natural forest of at least 1km²:
-osmar 53.076 8.807 3300 natural=wood 'way_area>1e+6'
+You can find the documentation on all available tags at
+[wiki.openstreetmap.org/wiki/Map_Features](https://wiki.openstreetmap.org/wiki/Map_Features).
+Here are a few more examples:
 
+```bash
 # Find a bakery:
 osmar 53.076 8.807 200 shop=bakery
 
@@ -78,102 +84,36 @@ osmar 53.076 8.807 500 route=hiking
 # Searching for multiple values of the same tag is also possible:
 osmar 53.076 8.807 3000 sport=climbing sport=swimming
 
-# Pro tip: Use "_" to search for any value:
-osmar 53.076 8.807 500 sport=_
+# Pro tip: Use "*" to search for any value:
+osmar 53.076 8.807 500 'sport=*'
 
-# Learn about the population of the city and it's urban districts:
-osmar 53.076 8.807 10000 population=_
+# Learn about the population of the city and its urban districts:
+osmar 53.076 8.807 10000 'population=*'
 ```
 
-# Custom Database Connection
-A custom database connection can be used by setting
-the `OSMAR_CONN` environment variable; find more info
-[here](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING):
+# Performance
+Because osmar is parsing compressed PBF files on the fly, performance is
+somewhat limited, but should be good enough for a few queries now and
+then. Try to use the smallest extract that is available for your area.
 
-```console
-OSMAR_CONN='postgres://user:password@localhost:5432/gis' osmar 53.076 8.807 50
-```
+The performance can be improved slightly by converting PBF files to zstd compression with 
+the [zstd-pbf tool](https://github.com/codesoap/zstd-pbf).
 
-# Full Usage Info
-```
-osmar <lat> <long> <radius_meter> [way_area<<value>] [way_area><value>] [<tag>=<value>]...
+Here are some quick measurements; better results will probably be
+achieved with more modern hardware:
 
-Environment:
-	OSMAR_CONN  Custom connection string for the PostgreSQL database.
+| PBF file | Query | CPU | Runtime | RAM usage |
+| --- | --- | --- | --- | --- |
+| bremen-latest.osm.pbf (19.3MiB) | `osmar 53.076 8.807 50 'shop=*'` | i5-8250U (4x1.6GHz) | ~0.25s | ~90MiB |
+| bremen-latest.osm.pbf (19.3MiB) | `osmar 53.076 8.807 50 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~0.13s | ~150MiB |
+| bremen-latest.zstd.osm.pbf (19.4MiB) | `osmar 53.076 8.807 50 'shop=*'` | i5-8250U (4x1.6GHz) | ~0.22s | ~100MiB |
+| bremen-latest.zstd.osm.pbf (19.4MiB) | `osmar 53.076 8.807 50 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~0.12s | ~150MiB |
+| czech-republic-latest.osm.pbf (828MiB) | `osmar 49.743 13.379 200 'shop=*'` | i5-8250U (4x1.6GHz) | ~9s | ~400MiB |
+| czech-republic-latest.osm.pbf (828MiB) | `osmar 49.743 13.379 200 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~4.0s | ~650MiB |
+| czech-republic-latest.zstd.osm.pbf (847MiB) | `osmar 49.743 13.379 200 'shop=*'` | i5-8250U (4x1.6GHz) | ~7s | ~450MiB |
+| czech-republic-latest.zstd.osm.pbf (847MiB) | `osmar 49.743 13.379 200 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~3.7s | ~675MiB |
 
-General tags:
-	access
-	addr:housename
-	addr:housenumber
-	addr:interpolation
-	admin_level
-	aerialway
-	aeroway
-	amenity
-	area
-	barrier
-	bicycle
-	brand
-	bridge
-	boundary
-	building
-	construction
-	covered
-	culvert
-	cutting
-	denomination
-	disused
-	embankment
-	foot
-	generator:source
-	harbour
-	highway
-	historic
-	horse
-	intermittent
-	junction
-	landuse
-	layer
-	leisure
-	lock
-	man_made
-	military
-	motorcar
-	name
-	natural
-	office
-	oneway
-	operator
-	place
-	population
-	power
-	power_source
-	public_transport
-	railway
-	ref
-	religion
-	route
-	service
-	shop
-	sport
-	surface
-	toll
-	tourism
-	tower:type
-	tunnel
-	water
-	waterway
-	wetland
-	width
-	wood
-
-Tags only for lines and polygons:
-	tracktype
-
-Tags only for for points:
-	capital
-	ele
-```
-
-The tags are explained
-[here](https://wiki.openstreetmap.org/wiki/Map_Features).
+PS: Previously osmar accessed a PostgreSQL database. This was much
+faster and had some other benefits, but the database was annoying to set
+up, so I abandoned this approach. You can find this version of osmar here:
+[github.com/codesoap/osmar/tree/v2](https://github.com/codesoap/osmar/tree/v2)

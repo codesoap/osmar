@@ -1,6 +1,12 @@
 A small tool for querying OSM data from PBF files.
 
 # Installation
+You can download the tool from the releases page:
+https://github.com/codesoap/osmar/releases
+
+If you have the Go toolchain installed and prefer to build osmar
+yourself, you can get it by running this:
+
 ```bash
 go install github.com/codesoap/osmar/v3@latest
 # The binary is now at ~/go/bin/osmar.

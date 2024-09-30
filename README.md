@@ -1,4 +1,4 @@
-A small tool for querying osm data from PBF files.
+A small tool for querying OSM data from PBF files.
 
 # Installation
 ```bash

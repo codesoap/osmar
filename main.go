@@ -12,7 +12,7 @@ import (
 	"github.com/codesoap/pbf"
 )
 
-const usage = `Usage: osmar <lat> <long> <radius_meter> [<tag>=<value>]...
+const usage = `Usage: osmar <lat> <lon> <radius_meter> [<tag>=<value>]...
 Info about tags: https://wiki.openstreetmap.org/wiki/Map_Features
 
 Environment:
@@ -44,14 +44,14 @@ func main() {
 	}
 	lat, err := strconv.ParseFloat(os.Args[1], 64)
 	dieOnErr("Could not parse lat: %s\n", err)
-	long, err := strconv.ParseFloat(os.Args[2], 64)
-	dieOnErr("Could not parse long: %s\n", err)
+	lon, err := strconv.ParseFloat(os.Args[2], 64)
+	dieOnErr("Could not parse lon: %s\n", err)
 	radius, err := strconv.ParseFloat(os.Args[3], 64)
 	dieOnErr("Could not parse radius: %s\n", err)
 	tags, err := getTags()
 	dieOnErr("Could not parse tags: %s\n", err)
 
-	res, err := getResults(lat, long, radius, tags)
+	res, err := getResults(lat, lon, radius, tags)
 	dieOnErr("Failed to query database: %s\n", err)
 	sort.Slice(res, func(i, j int) bool { return res[i].distance < res[j].distance })
 	printResults(res)

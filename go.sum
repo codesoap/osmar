@@ -1,7 +1,7 @@
 github.com/codesoap/lineworker v0.2.0 h1:hy8dj55dwRCr6PspJM3ISV533P9TKWrvD3Mx66uSAbg=
 github.com/codesoap/lineworker v0.2.0/go.mod h1:aatQ4DVq3bEOUG0O5lAcBhSiwH2BmwmSYQPJjrYCv6w=
-github.com/codesoap/pbf v0.1.1 h1:9roRHrOfWKTO4PtsekU99gCVDdcbCK0FKo4zSWblS1Y=
-github.com/codesoap/pbf v0.1.1/go.mod h1:7DnX49CF9HZpZVF/d6E43/tDxLoO+AMomF6zhg5fS/M=
+github.com/codesoap/pbf v0.1.2 h1:DP2hgEtSDcYfVH5LpiqeAX2C17pIvb1tB0y9A84pjd8=
+github.com/codesoap/pbf v0.1.2/go.mod h1:7DnX49CF9HZpZVF/d6E43/tDxLoO+AMomF6zhg5fS/M=
 github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/klauspost/compress v1.17.10 h1:oXAz+Vh0PMUvJczoi+flxpnBEPxoER1IaAnU/NMPtT0=

@@ -110,14 +110,14 @@ achieved with more modern hardware:
 
 | PBF file | Query | CPU | Runtime | RAM usage |
 | --- | --- | --- | --- | --- |
-| bremen-latest.osm.pbf (19.3MiB) | `osmar 53.076 8.807 50 'shop=*'` | i5-8250U (4x1.6GHz) | ~0.25s | ~90MiB |
-| bremen-latest.osm.pbf (19.3MiB) | `osmar 53.076 8.807 50 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~0.13s | ~150MiB |
-| bremen-latest.zstd.osm.pbf (19.4MiB) | `osmar 53.076 8.807 50 'shop=*'` | i5-8250U (4x1.6GHz) | ~0.22s | ~100MiB |
-| bremen-latest.zstd.osm.pbf (19.4MiB) | `osmar 53.076 8.807 50 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~0.12s | ~150MiB |
-| czech-republic-latest.osm.pbf (828MiB) | `osmar 49.743 13.379 200 'shop=*'` | i5-8250U (4x1.6GHz) | ~9s | ~400MiB |
-| czech-republic-latest.osm.pbf (828MiB) | `osmar 49.743 13.379 200 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~4.0s | ~650MiB |
-| czech-republic-latest.zstd.osm.pbf (847MiB) | `osmar 49.743 13.379 200 'shop=*'` | i5-8250U (4x1.6GHz) | ~7s | ~450MiB |
-| czech-republic-latest.zstd.osm.pbf (847MiB) | `osmar 49.743 13.379 200 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~3.7s | ~675MiB |
+| bremen-latest.osm.pbf (19.3MiB)             | `osmar 53.076 8.807 50 'shop=*'`   | i5-8250U (4x1.6GHz)         | ~0.24s | ~65MiB  |
+| bremen-latest.osm.pbf (19.3MiB)             | `osmar 53.076 8.807 50 'shop=*'`   | AMD Ryzen 5 3600 (6x4.2GHz) | ~0.10s | ~125MiB |
+| bremen-latest.zstd.osm.pbf (19.4MiB)        | `osmar 53.076 8.807 50 'shop=*'`   | i5-8250U (4x1.6GHz)         | ~0.20s | ~70MiB  |
+| bremen-latest.zstd.osm.pbf (19.4MiB)        | `osmar 53.076 8.807 50 'shop=*'`   | AMD Ryzen 5 3600 (6x4.2GHz) | ~0.09s | ~140MiB |
+| czech-republic-latest.osm.pbf (828MiB)      | `osmar 49.743 13.379 200 'shop=*'` | i5-8250U (4x1.6GHz)         | ~7s    | ~320MiB |
+| czech-republic-latest.osm.pbf (828MiB)      | `osmar 49.743 13.379 200 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~2.9s  | ~600MiB |
+| czech-republic-latest.zstd.osm.pbf (847MiB) | `osmar 49.743 13.379 200 'shop=*'` | i5-8250U (4x1.6GHz)         | ~5s    | ~350MiB |
+| czech-republic-latest.zstd.osm.pbf (847MiB) | `osmar 49.743 13.379 200 'shop=*'` | AMD Ryzen 5 3600 (6x4.2GHz) | ~2.5s  | ~650MiB |
 
 PS: Previously osmar accessed a PostgreSQL database. This was much
 faster and had some other benefits, but the database was annoying to set

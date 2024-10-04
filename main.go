@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,10 +30,6 @@ func init() {
 		fmt.Fprintln(os.Stderr, "The OSMAR_PBF_FILE environment variable must be set.")
 		os.Exit(1)
 	}
-
-	// Trade memory for performance gains in the GC. Overall runtime of the
-	// program seems to decrease by ~15% while memory use rises by ~20%.
-	debug.SetGCPercent(150)
 }
 
 func main() {

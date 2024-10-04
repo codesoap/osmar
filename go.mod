@@ -2,7 +2,7 @@ module github.com/codesoap/osmar/v3
 
 go 1.22.1
 
-require github.com/codesoap/pbf v0.1.0
+require github.com/codesoap/pbf v0.1.1
 
 require (
 	github.com/codesoap/lineworker v0.2.0 // indirect

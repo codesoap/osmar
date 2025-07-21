@@ -27,7 +27,8 @@ type entity struct {
 
 func init() {
 	if pbfFile = os.Getenv("OSMAR_PBF_FILE"); pbfFile == "" {
-		fmt.Fprintln(os.Stderr, "The OSMAR_PBF_FILE environment variable must be set.")
+		fmt.Fprintln(os.Stderr, "The OSMAR_PBF_FILE environment variable must be set.\n")
+		fmt.Fprintf(os.Stderr, usage)
 		os.Exit(1)
 	}
 }
